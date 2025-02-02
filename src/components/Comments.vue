@@ -2,112 +2,147 @@
   <div class="container py-4">
     <!-- 탭 영역 -->
     <div class="d-flex border-bottom mb-4">
-      <button class="btn btn-light flex-fill border-bottom-0 fw-bold">구매평 (15)</button>
-      <button class="btn btn-light flex-fill border-bottom-0">상세정보</button>
+      <button 
+        class="btn btn-light flex-fill border-bottom-0 fw-bold"
+        :class="{ active: activeTab === 'reviews' }"
+        @click="activeTab = 'reviews'">
+        구매평 ({{ totalReviews }})
+      </button>
+      <button 
+        class="btn btn-light flex-fill border-bottom-0"
+        :class="{ active: activeTab === 'details' }"
+        @click="activeTab = 'details'">
+        상세정보
+      </button>
     </div>
 
-    <!-- 구매평 작성 버튼 -->
-    <div class="d-flex justify-content-end align-items-center mb-3">
-      <div>
-        <button class="btn btn-outline-secondary btn-sm me-2">포토 구매평 보기</button>
-        <select class="form-select form-select-sm d-inline-block w-auto">
-          <option>전체 평점 보기</option>
-          <option>5점</option>
-          <option>4점</option>
-          <option>3점</option>
-          <option>2점</option>
-          <option>1점</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 리뷰 리스트 -->
-    <div class="review-list">
-      <div
-        v-for="(review, index) in reviews"
-        :key="index"
-        class="border-top py-3">
-        <div class="d-flex align-items-start">
-          <!-- 별점 -->
-          <div class="text-warning me-3">
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-          </div>
-          <!-- 리뷰 내용 -->
-          <div class="flex-grow-1">
-            <p class="mb-1">{{ review.content }}</p>
-            <small class="text-muted">{{ review.author }}</small>
-          </div>
+    <!-- 리뷰 목록 -->
+    <div v-if="activeTab === 'reviews'">
+      <div v-if="reviews.length">
+        <div v-for="review in reviews" :key="review.id" class="border-top py-3">
+          <h5>{{ review.user.username }} <span class="star">⭐</span> <span class="rating">{{ review.rating }} / 5</span></h5>
+          <small class="text-muted">{{ new Date(review.createdAt).toLocaleDateString() }}</small>
+          <p>{{ review.comment }}</p>
         </div>
       </div>
+      <div v-else>
+        <p class="text-muted">리뷰가 없습니다.</p>
+      </div>
+
+      <!-- 페이징 -->
+      <nav v-if="totalPages > 1" class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li 
+            class="page-item" 
+            v-for="page in totalPages" 
+            :key="page" 
+            :class="{ active: currentPage === page }">
+            <button class="page-link" @click="changePage(page)">{{ page }}</button>
+          </li>
+        </ul>
+      </nav>
     </div>
 
-    <!-- 페이지네이션 -->
-    <nav class="mt-4 ">
-      <ul class="pagination justify-content-center">
-        <li class="page-item">
-          <a class="page-link" href="#">1</a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="#">2</a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="#">3</a>
-        </li>
-      </ul>
-      <div class="d-flex justify-content-end">
-        <button class="btn primary-color">구매평 작성</button>
-      </div>
-    </nav>
+    <!-- 상세정보 탭 -->
+    <div v-else>
+      <p>이곳에 상세 정보를 입력하세요.</p>
+    </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
+  props: {
+    productId: {
+      type: Number,
+      required: true
+    }
+  },
   data() {
     return {
-      reviews: [
-        {
-          content: "유튜브인가 블로그 통해서 찾아오게 되었습니다. 좋은 프로그램 너무 많은 것 같...",
-          author: "동기동기당",
-        },
-        {
-          content: "맨날 손으로 직접작성하다가 노이로즈걸려서 구매했어요 ㅋㅋㅋ 이정도 가격이면...",
-          author: "leeraLii",
-        },
-        {
-          content: "옵션 선택하는게 나은 듯 하네요! 3일은 짧더라구여 그래두 효과는 최고!!",
-          author: "바그다11",
-        },
-        {
-          content: "강추드립니다!! 다른데 3분의 1가격도 안되요ㅋㅋㅋ",
-          author: "민고더블로가22",
-        },
-        {
-          content: "이정도면 그냥 밀쳐야 본전 가격 + 퀄리티네요?? 너무 좋은데여? ㅋㅋㅋ",
-          author: "비프에이사",
-        },
-      ],
+      reviews: [],
+      activeTab: 'reviews',
+      currentPage: 1,
+      totalPages: 0,
+      totalReviews: 0,
     };
   },
+  watch: {
+    productId(newVal) {
+      if (newVal) {
+        this.fetchReviews(1);  // productId가 변경될 때마다 첫 페이지 로드
+      }
+    }
+  },
+  mounted() {
+    if (this.productId) {
+      this.fetchReviews(1);
+    }
+  },
+  methods: {
+    async fetchReviews(page) {
+      try {
+        const response = await axios.get(`http://localhost:8082/products/${this.productId}/reviews`, {
+          params: { page: page - 1, size: 5 }
+        });
+        this.reviews = response.data.content || [];
+        this.totalPages = response.data.totalPages;
+        this.totalReviews = response.data.totalElements;
+        this.currentPage = page;  // 페이지 상태를 업데이트
+      } catch (error) {
+        console.error('❌ 리뷰 정보를 불러오는 중 오류 발생:', error);
+        this.reviews = [];
+      }
+    },
+    changePage(pageNumber) {
+      if (this.currentPage !== pageNumber) {
+        this.fetchReviews(pageNumber);
+      }
+    }
+  }
 };
 </script>
 
 <style scoped lang="scss">
 @import '~/scss/main.scss';
-.review-list .bi-star-fill {
-  font-size: 1rem;
+
+.active {
+  border-bottom: 2px solid $primary;
+  font-weight: bold;
 }
+
 .primary-color {
   background-color: $primary;
   color: white;
   transition: background-color 0.5s;
 }
+
 .primary-color:hover {
   background-color: $primary-opacity;
   color: white;
+}
+
+.star {
+  color: gold;
+  font-size: 0.85rem; 
+  margin-right: 4px;
+}
+
+.rating {
+  font-size: 0.85rem;
+  color: black;
+}
+
+.text-muted {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.page-item.active .page-link {
+  background-color: $primary;
+  color: white;
+  border-color: $primary;
 }
 </style>

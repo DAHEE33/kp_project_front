@@ -55,6 +55,7 @@ export default createRouter({
     // 상품상세 페이지
     {
       path: '/productDetail/:id',
+      name: 'ProductDetail',
       component: ProductDetail
     }
   ]

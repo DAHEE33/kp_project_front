@@ -139,13 +139,8 @@ export default {
     // ✅ 리뷰 목록 불러오기
     async fetchReviews(page) {
       try {
-<<<<<<< Updated upstream
         const response = await axios.get(`http://localhost:8082/pass/products/${this.productId}/reviews`, {
-          params: { page: page - 1, size: 5 }
-=======
-        const response = await axios.get(`http://localhost:8082/products/${this.productId}/reviews`, {
           params: { page: page - 1, size: 5, sort: this.sortOption}
->>>>>>> Stashed changes
         });
 
         // ✅ 사용자가 이미 추천한 리뷰 체크
@@ -166,7 +161,7 @@ export default {
     // ✅ 구매 여부 확인
     async checkPurchaseStatus() {
       try {
-        const response = await axios.get(`http://localhost:8082/reviews/${this.productId}/check-purchase`, {
+        const response = await axios.get(`http://localhost:8082/pass/reviews/${this.productId}/check-purchase`, {
           params: { userId: this.userId }
         });
         this.canWriteReview = response.data; 
@@ -185,7 +180,7 @@ export default {
       }
 
       try {
-        await axios.post(`http://localhost:8082/reviews/${review.id}/like`, { userId: this.userId });
+        await axios.post(`http://localhost:8082/pass/reviews/${review.id}/like`, { userId: this.userId });
         review.likes++;              
         review.likedByUser = true;   
       } catch (error) {

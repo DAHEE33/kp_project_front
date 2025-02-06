@@ -47,7 +47,8 @@
     </div>
   </div>
   <!-- Comments 컴포넌트 -->
-  <Comments :productId="product.id" />
+  <Comments v-if="product.id" :productId="product.id" :userId="userId" />
+
 </template>
 
 <script>
@@ -64,7 +65,8 @@ export default {
       product: {},
       demoImg: testImg,
       selectedOption: '',
-      showError: false
+      showError: false,
+      userId : 1
     };
   },
   mounted() {

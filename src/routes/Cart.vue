@@ -3,7 +3,7 @@
     <!-- 상품 정보 Header -->
     <div class="d-flex align-items-center border-bottom pb-3 mb-3">
       <input type="checkbox" v-model="allSelected" @change="toggleSelectAll" class="me-2">
-      <p class="flex-grow-1 text-secondary m-0">상품 정보test</p>
+      <p class="flex-grow-1 text-secondary m-0">상품 정보</p>
       <p class="text-secondary text-center m-0 quantity-column">수량</p>
       <p class="text-secondary text-center m-0 price-column">주문 금액</p>
       <p class="text-secondary text-center m-0 delivery-column">배송 정보</p>

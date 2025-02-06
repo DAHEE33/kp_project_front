@@ -49,8 +49,8 @@ export default {
   methods: {
     async fetchProducts() {
       try {
-        console.log("API 요청 시작: http://localhost:8082/products");
-        const response = await axios.get("http://localhost:8082/products");
+        console.log("API 요청 시작: http://localhost:8082/pass/products");
+        const response = await axios.get("http://localhost:8082/pass/products");
         console.log("API 응답 성공:", response.data);
         this.products = response.data;
       } catch (error) {

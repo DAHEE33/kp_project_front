@@ -23,22 +23,22 @@
           <form @submit.prevent="submitForm">
             <div class="form-group">
               <label for="name">이름 :</label>
-              <input type="text" id="name" v-model="userInfo.name" placeholder="이름을 입력하세요" />
+              <input type="text" id="name" v-model="userInfo.username" placeholder="이름을 입력하세요" />
             </div>
             <div class="form-group">
               <label for="email">이메일 :</label>
-              <input type="email" id="email" v-model="userInfo.email" placeholder="이메일을 입력하세요" />
+              <input type="email" id="email" v-model="userInfo.email" disabled />
             </div>
             <div class="form-group">
               <label for="phone">휴대폰번호 :</label>
-              <input type="text" id="phone" v-model="userInfo.phone" placeholder="휴대폰번호를 입력하세요" />
+              <input type="text" id="phone" v-model="userInfo.phoneNumber" placeholder="휴대폰번호를 입력하세요" />
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label for="address">주소 :</label>
               <input type="text" id="address" v-model="userInfo.address" placeholder="주소를 입력하세요" />
-            </div>
+            </div> -->
             <div class="popup-actions">
-              <button type="submit" class="save-btn">저장</button>
+              <button type="submit" @click="updateInfo" class="save-btn">저장</button>
               <button type="button" @click="closeEditPopup" class="cancel-btn">닫기</button>
             </div>
           </form>
@@ -61,18 +61,13 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-
+import { mapState, mapActions } from 'vuex';
+import axios from 'axios'
 export default {
   data() {
     return {
       selectedTab: 'orderHistory', // 기본 선택된 탭
-      userInfo: {
-        name: '',
-        email: '',
-        phone: '',
-        address: ''
-      },
+      userInfo: {}, // 회원 정보
       isPopupVisible: false, // 회원탈퇴 팝업 상태
       isEditPopupVisible: false // 회원정보 수정 팝업 상태
     };
@@ -85,6 +80,18 @@ export default {
     ])
   },
   methods: {
+    getCurrUser() {
+      axios.get('http://localhost:8082/user/info', { withCredentials: true })
+        .then(response => {
+          this.userInfo = response.data;
+        })
+        .catch(error => {
+          console.error("API 호출 에러:", error);
+        });
+    },
+    updateInfo() {
+      
+    },
     openEditPopup() {
       // 회원정보 수정 팝업 열기
       this.isEditPopupVisible = true;
@@ -94,9 +101,17 @@ export default {
       this.isEditPopupVisible = false;
     },
     submitForm() {
-      console.log("회원 정보 수정:", this.userInfo);
-      alert("회원 정보가 수정되었습니다.");
-      this.isEditPopupVisible = false; // 팝업 닫기
+        axios.post('http://localhost:8082/user/update', this.userInfo, { withCredentials: true })
+        .then(response => {
+          console.log("회원 정보 수정 결과:", response.data);
+          alert("회원 정보가 수정되었습니다.");
+          this.isEditPopupVisible = false; // 팝업 닫기
+          
+        })
+        .catch(error => {
+          alert("회원 정보 수정에 시도하던 중 오류가 발생했습니다.");
+          console.error("API 호출 에러:", error);
+        });
     },
     openPopup() {
       // 탈퇴 팝업 열기
@@ -106,13 +121,32 @@ export default {
       // 탈퇴 팝업 닫기
       this.isPopupVisible = false;
     },
+    ...mapActions(['logout']),
     confirmDelete() {
-      // 탈퇴 처리 로직 (예시로 alert 사용)
-      alert("회원 탈퇴가 완료되었습니다.");
-      this.isPopupVisible = false; // 팝업 닫기
+      axios.get('http://localhost:8082/user/delete', { withCredentials: true })
+        .then(response => {
+          console.log("회원 정보 수정 결과:", response.data);
+          alert("회원 탈퇴가 완료되었습니다.");
+          this.isPopupVisible = false; // 팝업 닫기
+
+        
+          // Vuex의 logout 액션 호출 (토큰/사용자 정보 삭제 및 쿠키 삭제)
+          this.logout(); 
+          // 로그아웃 후 로그인 페이지로 이동합니다.
+          this.$router.push('/login');
+        })
+        .catch(error => {
+          alert("회원 탈퇴 중 오류가 발생하였습니다.");
+          console.error("API 호출 에러:", error);
+        });
+      
+      
     }
+  },
+  mounted() {
+    this.getCurrUser();
   }
-};
+}
 </script>
 
 <style scoped lang="scss">

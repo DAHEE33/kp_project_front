@@ -10,7 +10,9 @@
           alt="카카오 로그인" />
         <span>카카오 시작하기</span>
       </button>
-      <button class="login-btn ggl">
+      <button 
+        @click="gglLogin" 
+        class="login-btn ggl">
         <img 
           :src="gglImg"
           alt="카카오 로그인" />
@@ -22,6 +24,11 @@
 <script>
 import { mapState } from 'vuex'
 export default {
+  methods: {
+    gglLogin() {
+      window.location.href = "http://localhost:8082/oauth2/authorization/google";
+    }
+  },
  computed: {
    ...mapState('login', [
      'kkoImg',

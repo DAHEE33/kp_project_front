@@ -22,25 +22,32 @@
         :alt="name" />
     </div> -->
     <div class="tabs">
-      <RouterLink 
-        :to="'/login'">
-        로그인
-      </RouterLink>
-      <RouterLink 
-        :to="'/mypage'">
-        마이페이지
-      </RouterLink>
-      <RouterLink 
-        :to="'/cart'">
-        장바구니
-      </RouterLink>
+      <!-- 인증 상태에 따라 메뉴 토글 -->
+      <template v-if="!isAuthenticated">
+        <RouterLink to="/login">
+          로그인
+        </RouterLink>
+      </template>
+      <template v-else>
+        <a 
+          href="#" 
+          @click.prevent="handleLogout">
+          로그아웃
+        </a>
+        <RouterLink to="/mypage">
+          마이페이지
+        </RouterLink>
+        <RouterLink to="/cart">
+          장바구니
+        </RouterLink>
+      </template>
     </div>
   </header>
 </template>
 
 <script>
 import Logo from '~/components/Logo'
-import { mapState } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 export default {
   components: {
     Logo
@@ -60,13 +67,16 @@ export default {
     }
   },
   computed: {
-    ...mapState('about', [
-      'image',
-      'name'
-    ])
+    // 루트 스토어에 있는 인증 상태를 가져옵니다.
+    ...mapGetters(['isAuthenticated', 'user'])
   },
   methods: {
-
+    ...mapActions(['logout']),
+      handleLogout() {
+        this.logout(); // Vuex의 logout 액션 호출 (토큰/사용자 정보 삭제 및 쿠키 삭제)
+        // 로그아웃 후 로그인 페이지로 이동합니다.
+        this.$router.push('/login');
+      }
   }
 }
 </script>
@@ -78,56 +88,34 @@ header {
   align-items: center;
   padding: 0 40px;
   position: relative;
-  .logo {
-    margin-right: 40px;
+  
+  .nav {
+    // 필요한 nav 스타일
   }
-  .user {
-    width: 40px;
-    height: 40px;
-    padding: 6px;
-    border-radius: 50%;
-    box-sizing: border-box;
-    background-color: $gray-200;
-    cursor: pointer;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 40px;
-    margin: auto;
-    transition: .4s;
-    &:hover {
-      background-color: darken($gray-200, 10%);
-    }
-    img {
-      width: 100%;
-    }
+  
+  .center-nav {
+    margin-left: auto;
+    margin-right: auto;
   }
+  
   .tabs {
-  display: flex;
-  flex-direction: row;
+    display: flex;
+    flex-direction: row;
   }
-  .tabs a {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  // margin-bottom: 5px; /* 탭 사이의 간격 조절 */
-  // padding: 5px;
-  }
+  
   .tabs a {
     margin-right: 10px;
+    text-decoration: none;
+    color: inherit;
   }
+  
   .tabs a:last-child {
-  margin-right: 0; /* 탭 사이의 간격 조절 */
+    margin-right: 0;
   }
+  
   @include media-breakpoint-down(sm) {
     .nav {
       display: none;
-    }
-  }
-  @include media-breakpoint-up(sm) { //가운데 정렬
-    .center-nav {
-      margin-left: auto;
-      margin-right: auto;
     }
   }
 }

@@ -74,7 +74,7 @@ export default {
   methods: {
     async fetchProduct(id) {
       try {
-        const response = await axios.get(`http://localhost:8082/products/${id}`);
+        const response = await axios.get(`http://localhost:8082/pass/products/${id}`);
         this.product = response.data;
       } catch (error) {
         console.error('❌ 상품 정보를 불러오는 중 오류 발생:', error);

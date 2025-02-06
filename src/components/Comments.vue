@@ -84,7 +84,7 @@ export default {
   methods: {
     async fetchReviews(page) {
       try {
-        const response = await axios.get(`http://localhost:8082/products/${this.productId}/reviews`, {
+        const response = await axios.get(`http://localhost:8082/pass/products/${this.productId}/reviews`, {
           params: { page: page - 1, size: 5 }
         });
         this.reviews = response.data.content || [];

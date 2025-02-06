@@ -8,55 +8,42 @@ import Cart from './Cart'
 import Mypage from './Mypage'
 import ProductList from './ProductList'
 import ProductDetail from './ProductDetail'
-export default createRouter({
+import store from '../store/index'  // Vuex 스토어 불러오기
+
+const routes = [
+  { path: '/', component: Home },
+  { path: '/movie/:id', component: Movie },
+  { path: '/about', component: About },
+  // 신규 생성 라우터
+  { path: '/login', component: Login },
+  { path: '/cart', component: Cart, meta: { requiresAuth: true } },
+  { path: '/mypage', component: Mypage, meta: { requiresAuth: true } },
+  { path: '/productList', component: ProductList },
+  { path: '/productDetail/:id', name: 'ProductDetail', component: ProductDetail},
+  { path: '/:notFound(.*)', component: NotFound },
+];
+
+const router = createRouter({
   history: createWebHashHistory(),
   scrollBehavior() {
     return { top: 0 }
   },
-  routes: [
-    {
-      path: '/',
-      component: Home
-    },
-    {
-      path: '/movie/:id',
-      component: Movie
-    },
-    {
-      path: '/about',
-      component: About
-    },
-    {
-      path: '/:notFound(.*)',
-      component: NotFound
-    },
-    /* 신규 추가 소스 */
+  routes
+});
 
-    // 로그인 페이지
-    {
-      path: '/login',
-      component: Login
-    },
-    // 장바구니 페이지
-    {
-      path: '/cart',
-      component: Cart
-    },
-    // 마이페이지
-    {
-      path: '/mypage',
-      component: Mypage
-    },
-    // 상품목록 페이지
-    {
-      path: '/productList',
-      component: ProductList
-    },
-    // 상품상세 페이지
-    {
-      path: '/productDetail/:id',
-      name: 'ProductDetail',
-      component: ProductDetail
+// 네비게이션 가드: 보호된 페이지에 대해 Vuex의 인증 상태를 확인
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAuth) {
+    if (store.getters.isAuthenticated) {
+      // Vuex에 토큰이 있으면 인증된 것으로 간주
+      next();
+    } else {
+      // 인증되지 않은 경우 로그인 페이지로 이동
+      next('/login');
     }
-  ]
-})
+  } else {
+    next();
+  }
+});
+
+export default router;

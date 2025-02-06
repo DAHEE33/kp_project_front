@@ -8,6 +8,7 @@ import Cart from './Cart'
 import Mypage from './Mypage'
 import ProductList from './ProductList'
 import ProductDetail from './ProductDetail'
+import Order from './Order'
 import store from '../store/index'  // Vuex 스토어 불러오기
 
 const routes = [
@@ -21,6 +22,7 @@ const routes = [
   { path: '/productList', component: ProductList },
   { path: '/productDetail/:id', name: 'ProductDetail', component: ProductDetail},
   { path: '/:notFound(.*)', component: NotFound },
+  { path: '/order', component: Order }
 ];
 
 const router = createRouter({

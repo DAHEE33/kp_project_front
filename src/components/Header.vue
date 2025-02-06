@@ -9,7 +9,7 @@
         <RouterLink
           :to="nav.href"
           active-class="active"
-          class="nav-link">
+          class="nav-link text-dark">
           {{ nav.name }}
         </RouterLink>
       </div>
@@ -47,7 +47,7 @@
 
 <script>
 import Logo from '~/components/Logo'
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   components: {
     Logo
@@ -117,6 +117,9 @@ header {
     .nav {
       display: none;
     }
+  }
+  .router-link-exact-active {
+    text-decoration-color: #fff;
   }
 }
 </style>

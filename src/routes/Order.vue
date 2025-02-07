@@ -1,10 +1,12 @@
 <template>
   <div class="container order-page mt-4">
-    <h2 class="text-center mb-3">결제하기</h2>
+    <h2 class="text-center mb-3">
+      결제하기
+    </h2>
     <!-- 메인 2열 구조 -->
     <div class="row">
       <!-- 왼쪽 컬럼 (상품정보, 주문자정보, 쿠폰) -->
-      <div class="col-lg-8">
+      <div class="col-lg-7">
         <!-- 주문 상품 정보 -->
         <div class="card mb-3">
           <div class="card-header">
@@ -19,7 +21,9 @@
                 class="img-thumbnail me-3" 
                 style="width: 80px; height: 80px; object-fit: cover;" />
               <div>
-                <p class="fw-bold mb-1">구글 스프레드시트 주문 포스기</p>
+                <p class="fw-bold mb-1">
+                  구글 스프레드시트 주문 포스기
+                </p>
                 <p class="mb-0">
                   <span class="text-danger">49,000원</span>
                   <del class="text-muted ms-2">130,000원</del>
@@ -34,11 +38,21 @@
             주문자 정보
           </div>
           <div class="card-body">
-            <p class="mb-1">박주영</p>
-            <p class="mb-1">010-4224-4840</p>
+            <p class="mb-1">
+              <strong>이름 : </strong>{{ userInfo.username }}
+            </p>
+            <p class="mb-1">
+              <strong>전화번호 : </strong>{{ userInfo.phone }}
+            </p>
             <div class="d-flex justify-content-between">
-            <p class="mb-2">ajjyp484456@gmail.com</p>
-            <button class="btn btn-outline-primary btn-sm">수정</button>
+              <p class="mb-2">
+                <strong>이메일 : </strong>{{ userInfo.email }}
+              </p>
+              <button 
+                @click="updateMethod"
+                class="btn btn-outline-primary btn-sm">
+                수정
+              </button>
             </div>
           </div>
         </section>
@@ -57,9 +71,8 @@
           </div>
         </section> -->
       </div>
-
       <!-- 오른쪽 컬럼 (주문 요약, 결제 수단) -->
-      <div class="col-lg-4">
+      <div class="col-lg-5">
         <!-- 주문 요약 -->
         <section class="card mb-3">
           <div class="card-header">
@@ -80,7 +93,6 @@
             </div>
           </div>
         </section>
-
         <!-- 결제 수단 -->
         <section class="card">
           <div class="card-header">
@@ -92,11 +104,27 @@
                 class="form-check-input" 
                 type="radio" 
                 name="payment" 
-                id="payBank" 
-                checked 
-              />
-              <label class="form-check-label" for="payBank">
+                id="payBank"
+                value="payBank" 
+                v-model="selectedPayment" />
+              <label 
+                class="form-check-label" 
+                for="payBank">
                 무통장입금
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input 
+                class="form-check-input" 
+                type="radio" 
+                name="payment" 
+                id="paykko"
+                value="paykko" 
+                v-model="selectedPayment" />
+              <label 
+                class="form-check-label" 
+                for="paykko">
+                카카오페이
               </label>
             </div>
             <div class="form-check mb-3">
@@ -104,25 +132,27 @@
                 class="form-check-input" 
                 type="radio" 
                 name="payment" 
-                id="paySamsung" 
-              />
-              <label class="form-check-label" for="paySamsung">
-                삼성페이
+                id="paytoss"
+                value="paytoss" 
+                v-model="selectedPayment" />
+              <label 
+                class="form-check-label" 
+                for="paytoss">
+                토스페이
               </label>
             </div>
-
-            <select class="form-select mb-2">
-              <option>카카오뱅크 3333193372165 김광준</option>
-              <!-- 다른 계좌 옵션들 -->
-            </select>
-
-            <input 
-              type="text" 
-              class="form-control mb-2" 
-              placeholder="입금자명 (미입력시 주문자명)" />
-            <p class="text-muted mb-0">
-              주문 후 24시간 동안 미입금시 자동 취소됩니다.
-            </p>
+            <div v-if="selectedPayment === 'payBank'">
+              <select class="form-select mb-2">
+                <option>카카오뱅크 333333131313 박주영</option>
+              </select>
+              <input 
+                type="text" 
+                class="form-control mb-2" 
+                placeholder="입금자명 (미입력시 주문자명)" />
+              <p class="text-muted mb-0">
+                주문 후 24시간 동안 미입금시 자동 취소됩니다.
+              </p>
+            </div>
           </div>
         </section>
       </div>
@@ -137,10 +167,12 @@
             <input 
               class="form-check-input" 
               type="checkbox" 
-              value="" 
-              id="checkAll" 
-            />
-            <label class="form-check-label" for="checkAll">
+              v-model="checkAll"
+              @change="toggleAllCheckboxes"
+              id="checkAll" />
+            <label 
+              class="form-check-label" 
+              for="checkAll">
               전체 동의
             </label>
           </div>
@@ -149,19 +181,35 @@
             <input 
               class="form-check-input" 
               type="checkbox" 
-              value="" 
-              id="checkTerms" 
-            />
-            <label class="form-check-label" for="checkTerms">
-              구매조건 확인 및 결제진행에 동의
+              v-model="checkTerms"
+              @change="updateCheckAll"
+              id="checkTerms" />
+            <label 
+              class="form-check-label" 
+              for="checkTerms">
+              구매조건 동의
+            </label>
+          </div>
+          <div class="form-check ms-3">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              v-model="checkPrivacy"
+              @change="updateCheckAll"
+              id="checkPrivacy" />
+            <label 
+              class="form-check-label" 
+              for="checkPrivacy">
+              개인정보 처리방침 동의
             </label>
           </div>
         </div>
         <!-- 결제하기 버튼 -->
-        <button class="btn btn-primary btn-lg text-white">결제하기</button>
+        <button class="btn btn-primary btn-lg text-white">
+          결제하기
+        </button>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -170,17 +218,36 @@ import logo from '~/assets/logo.png';
 export default {
   data() {
     return {
-      testImg : logo
+      testImg : logo,
+      selectedPayment: 'payBank',
+      checkAll: false,
+      checkTerms: false,
+      checkPrivacy: false,
+      userInfo:
+        {
+          username: '박주영',
+          phone: '010-4224-4840',
+          email: 'aijyp484456@gmail.com'
+        }
     }
   },
   methods: {
-    // 필요한 메서드
-  },
+    toggleAllCheckboxes() {
+      const newValue = this.checkAll;
+      this.checkTerms = newValue;
+      this.checkPrivacy = newValue;
+    },
+    updateCheckAll() {
+      this.checkAll = this.checkTerms && this.checkPrivacy;
+    },
+    updateMethod() {
+      console.log('수정 버튼 클릭');
+    }
+  }
 }
 </script>
 
 <style scoped lang="scss">
 .order-page {
-  /* 별도 스타일 필요시 작성 */
 }
 </style>

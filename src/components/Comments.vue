@@ -2,33 +2,40 @@
   <div class="container py-4">
     <!-- ✅ 탭 영역 -->
     <div class="d-flex border-bottom mb-4 w-100">
-      <button 
+      <button
         class="btn btn-light flex-fill border-bottom-0 fw-bold tab-button"
         :class="{ active: activeTab === 'reviews' }"
-        @click="activeTab = 'reviews'">
+        @click="activeTab = 'reviews'"
+      >
         구매평 ({{ totalReviews }})
       </button>
-      <button 
+      <button
         class="btn btn-light flex-fill border-bottom-0 tab-button"
         :class="{ active: activeTab === 'details' }"
-        @click="activeTab = 'details'">
+        @click="activeTab = 'details'"
+      >
         상세정보
       </button>
     </div>
 
     <!-- ✅ 드롭다운 & 리뷰 작성하기 버튼 -->
     <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
-      <select v-model="sortOption" @change="fetchReviews(1)" class="form-select sort-dropdown">
+      <select
+        v-model="sortOption"
+        @change="fetchReviews(1)"
+        class="form-select sort-dropdown"
+      >
         <option value="latest">최신순</option>
         <option value="rating">별점순</option>
         <option value="likes">추천순</option>
       </select>
 
       <!-- ✅ 구매자 & 리뷰 미작성자만 버튼 표시 -->
-      <button 
-        v-if="canWriteReview" 
-        class="btn btn-primary" 
-        @click="writeReview">
+      <button
+        v-if="isLoggedIn && canWriteReview"
+        class="btn btn-primary"
+        @click="writeReview"
+      >
         리뷰 작성하기
       </button>
     </div>
@@ -36,24 +43,31 @@
     <!-- ✅ 리뷰 목록 -->
     <div v-if="activeTab === 'reviews'">
       <div v-if="reviews.length">
-        <div v-for="review in reviews" :key="review.id" class="border-top py-3 d-flex justify-content-between align-items-center">
+        <div
+          v-for="review in reviews"
+          :key="review.id"
+          class="border-top py-3 d-flex justify-content-between align-items-center"
+        >
           <div>
-            <h5>{{ review.user?.username || '알 수 없는 사용자' }} 
-              <span class="star">⭐</span> 
+            <h5>
+              {{ review.user?.username || "알 수 없는 사용자" }}
+              <span class="star">⭐</span>
               <span class="rating">{{ review.rating }} / 5</span>
             </h5>
             <small class="text-muted">{{ formatDate(review.createdAt) }}</small>
             <p>{{ review.comment }}</p>
           </div>
 
-          <!-- ✅ 추천하기 (좋아요) 버튼 -->
+          <!-- ✅ 좋아요 버튼 비활성화 -->
           <div class="like-section">
-            <button 
-              :class="['like-btn', { liked: review.likedByUser }]" 
-              @click="toggleLike(review)">
+            <button
+              :class="['like-btn', { liked: review.likedByUser }]"
+              @click="toggleLike(review)"
+            >
               ❤️
             </button>
-            <span>{{ review.likes }}</span> <!-- 추천 수 표시 -->
+
+            <span>{{ review.likes }}</span>
           </div>
         </div>
       </div>
@@ -68,12 +82,15 @@
             <li class="page-item" v-if="currentPageGroup > 1">
               <button class="page-link" @click="prevPageGroup">&lt;</button>
             </li>
-            <li 
-              class="page-item" 
-              v-for="page in visiblePages" 
-              :key="page" 
-              :class="{ active: currentPage === page }">
-              <button class="page-link" @click="changePage(page)">{{ page }}</button>
+            <li
+              class="page-item"
+              v-for="page in visiblePages"
+              :key="page"
+              :class="{ active: currentPage === page }"
+            >
+              <button class="page-link" @click="changePage(page)">
+                {{ page }}
+              </button>
             </li>
             <li class="page-item" v-if="currentPageGroup < totalPageGroups">
               <button class="page-link" @click="nextPageGroup">&gt;</button>
@@ -91,62 +108,64 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   props: {
     productId: {
       type: Number,
-      required: true
-    }
-    ,
-    userId: {
-      type: Number,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       reviews: [],
-      activeTab: 'reviews',
+      activeTab: "reviews",
       currentPage: 1,
       totalPages: 0,
       totalReviews: 0,
       currentPageGroup: 1,
       pagesPerGroup: 5,
-      sortOption: 'latest',   
-      canWriteReview: false 
+      sortOption: "latest",
+      canWriteReview: false,
+      isLoggedIn: false, // ✅ 로그인 여부 추가
     };
   },
+
   computed: {
     totalPageGroups() {
       return Math.ceil(this.totalPages / this.pagesPerGroup);
     },
     visiblePages() {
       const start = (this.currentPageGroup - 1) * this.pagesPerGroup + 1;
-      return Array.from({ length: Math.min(this.pagesPerGroup, this.totalPages - start + 1) }, (_, i) => start + i);
-    }
+      return Array.from(
+        { length: Math.min(this.pagesPerGroup, this.totalPages - start + 1) },
+        (_, i) => start + i
+      );
+    },
   },
   mounted() {
     console.log("✅ productId:", this.productId);
-    console.log("✅ userId:", this.userId);
 
-    
     this.fetchReviews(1);
-    this.checkPurchaseStatus();  
+    this.checkPurchaseStatus();
+    this.checkLoginStatus(); // ✅ 로그인 상태 확인
   },
   methods: {
     // ✅ 리뷰 목록 불러오기
     async fetchReviews(page) {
       try {
-        const response = await axios.get(`http://localhost:8082/pass/products/${this.productId}/reviews`, {
-          params: { page: page - 1, size: 5, sort: this.sortOption}
-        });
+        const response = await axios.get(
+          `http://localhost:8082/pass/products/${this.productId}/reviews`,
+          {
+            params: { page: page - 1, size: 5, sort: this.sortOption },
+          }
+        );
 
         // ✅ 사용자가 이미 추천한 리뷰 체크
-        this.reviews = response.data.content.map(review => ({
+        this.reviews = response.data.content.map((review) => ({
           ...review,
-          likedByUser: review.likedUsers?.includes(this.userId) || false
+          likedByUser: review.likedUsers?.includes(this.userId) || false,
         }));
 
         this.totalPages = response.data.totalPages;
@@ -154,40 +173,85 @@ export default {
         this.currentPage = page;
         this.currentPageGroup = Math.ceil(page / this.pagesPerGroup);
       } catch (error) {
-        console.error('❌ 리뷰 불러오기 오류:', error);
+        console.error("❌ 리뷰 불러오기 오류:", error);
+      }
+    },
+
+    async checkLoginStatus() {
+      try {
+        console.log("✅ 로그인 상태 확인 API 호출");
+
+        const response = await axios.get("http://localhost:8082/user/info", {
+          withCredentials: true, // 🔹 JWT 쿠키 포함 필수
+        });
+
+        console.log("✅ API 응답:", response.data);
+
+        if (response.status === 200 && response.data?.loggedIn) {
+          this.isLoggedIn = true;
+          this.userId = response.data.userId;
+          console.log("✅ 로그인 상태: true, userId:", this.userId);
+        } else {
+          this.isLoggedIn = false;
+          this.userId = null;
+          console.log("❌ 로그인 상태: false");
+        }
+      } catch (error) {
+        console.error("❌ 로그인 상태 확인 실패:", error);
+        this.isLoggedIn = false;
+        this.userId = null;
       }
     },
 
     // ✅ 구매 여부 확인
     async checkPurchaseStatus() {
-      try {
-        const response = await axios.get(`http://localhost:8082/pass/reviews/${this.productId}/check-purchase`, {
-          params: { userId: this.userId }
-        });
-        this.canWriteReview = response.data; 
-      } catch (error) {
-        console.error('❌ 구매 여부 확인 오류:', error);
-        this.canWriteReview = false; 
-      }
-    },
-
-    // ✅ 추천하기(좋아요) 토글
-    async toggleLike(review) {
-      console.log("✅ 좋아요 요청:", { reviewId: review.id, userId: this.userId });
-      if (review.likedByUser) {
-        alert('이미 추천하셨습니다.');
+      if (!this.isLoggedIn) {
+        this.canWriteReview = false; // ✅ 비회원이면 리뷰 작성 불가능
         return;
       }
 
       try {
-        await axios.post(`http://localhost:8082/pass/reviews/${review.id}/like`, { userId: this.userId });
-        review.likes++;              
-        review.likedByUser = true;   
+        const response = await axios.get(
+          `http://localhost:8082/pass/reviews/${this.productId}/check-purchase`,
+          { withCredentials: true }
+        );
+        this.canWriteReview = response.data;
       } catch (error) {
-        console.error('❌ 추천 실패:', error);
+        console.error("❌ 구매 여부 확인 오류:", error);
+        this.canWriteReview = false;
       }
     },
+    // ✅ 추천하기(좋아요) 토글
+    async toggleLike(review) {
+  await this.checkLoginStatus();
 
+  console.log("✅ 좋아요 버튼 클릭됨, 로그인 상태:", this.isLoggedIn);
+
+  if (!this.isLoggedIn) {
+    alert("회원만 가능합니다.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      `http://localhost:8082/pass/reviews/${review.id}/like`,
+      {},
+      { withCredentials: true }
+    );
+
+    const message = response.data || "추천 상태가 변경되었습니다.";
+    alert(message); // 🔹 응답이 undefined이면 기본 메시지 출력
+
+    if (response.data === "추천이 완료되었습니다.") {
+      review.likes++;
+      review.likedByUser = true;
+    }
+  } catch (error) {
+    console.error("❌ 추천 실패:", error);
+    alert("추천을 처리하는 중 오류가 발생했습니다.");
+  }
+}
+,
     formatDate(dateStr) {
       const date = new Date(dateStr);
       return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
@@ -215,13 +279,13 @@ export default {
 
     writeReview() {
       this.$router.push(`/products/${this.productId}/review`);
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped lang="scss">
-@import '~/scss/main.scss';
+@import "~/scss/main.scss";
 
 /* ✅ 탭 스타일 */
 .tab-button {

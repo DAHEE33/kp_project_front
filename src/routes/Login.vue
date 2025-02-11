@@ -4,7 +4,9 @@
       <h1>Login</h1>
     </div>
     <div class="btn-container">
-      <button class="login-btn kko">
+      <button 
+        @click="kkoLogin"
+        class="login-btn kko">
         <img 
           :src="kkoImg"
           alt="카카오 로그인" />
@@ -27,6 +29,9 @@ export default {
   methods: {
     gglLogin() {
       window.location.href = "http://localhost:8082/oauth2/authorization/google";
+    },
+     kkoLogin() {
+      window.location.href = "http://localhost:8082/oauth2/authorization/kakao";
     }
   },
  computed: {

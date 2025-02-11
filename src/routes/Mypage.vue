@@ -12,10 +12,8 @@
     <!-- 콘텐츠 영역 -->
     <div class="content">
       <div v-if="selectedTab === 'orderHistory'">
-        <h2>Order History Content</h2>
-        <p>주문 내역에 대한 내용이 여기에 표시됩니다.</p>
+        <OrderInquiry />
       </div>
-
       <!-- 회원정보 수정 팝업 -->
       <div v-if="isEditPopupVisible" class="popup-overlay" @click="closeEditPopup">
         <div class="popup-content info" @click.stop>
@@ -63,13 +61,38 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import axios from 'axios'
+import testImg from '~/assets/logo.png';
+import OrderInquiry from '~/components/OrderInquiry.vue';
 export default {
+  components: {
+    OrderInquiry
+  },
   data() {
     return {
       selectedTab: 'orderHistory', // 기본 선택된 탭
       userInfo: {}, // 회원 정보
       isPopupVisible: false, // 회원탈퇴 팝업 상태
-      isEditPopupVisible: false // 회원정보 수정 팝업 상태
+      isEditPopupVisible: false, // 회원정보 수정 팝업 상태
+      payments: [
+        {
+          dateTime: "1.23 14:25",
+          title: "스타벅스 사이렌오더",
+          price: 4500,
+          imageUrl:testImg
+        },
+        {
+          dateTime: "1.19 14:53",
+          title: "i쿠키 10개",
+          price: 1200,
+          imageUrl:testImg
+        },
+        {
+          dateTime: "1.15 16:04",
+          title: "(HOT)아메리카노 1개",
+          price: 1500,
+          imageUrl:testImg
+        }
+      ]
     };
   },
   computed: {
@@ -88,9 +111,6 @@ export default {
         .catch(error => {
           console.error("API 호출 에러:", error);
         });
-    },
-    updateInfo() {
-      
     },
     openEditPopup() {
       // 회원정보 수정 팝업 열기
@@ -270,5 +290,8 @@ button:hover {
 
 .cancel-btn:hover {
   background-color: #999;
+}
+.card {
+  border-radius: 8px;
 }
 </style>

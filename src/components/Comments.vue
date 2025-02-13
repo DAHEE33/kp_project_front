@@ -34,11 +34,29 @@
       <button
         v-if="isLoggedIn && canWriteReview"
         class="btn btn-primary"
-        @click="writeReview"
+        @click="showReviewForm = true"
       >
         리뷰 작성하기
       </button>
     </div>
+
+    <!-- ✅ 리뷰 작성 폼 (드롭다운에서 리뷰 작성하기 선택 시 표시) -->
+    <transition name="slide-fade">
+      <div v-if="showReviewForm" class="review-form border p-3 mb-3">
+        <h5>리뷰 작성</h5>
+        <div class="mb-2">
+          <label>별점:</label>
+          <select v-model="newReview.rating" class="form-select">
+            <option v-for="n in 5" :key="n" :value="n">{{ n }}점</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label>리뷰 내용:</label>
+          <textarea v-model="newReview.comment" class="form-control" rows="3"></textarea>
+        </div>
+        <button class="btn btn-success" @click="submitReview">작성 완료</button>
+      </div>
+    </transition>
 
     <!-- ✅ 리뷰 목록 -->
     <div v-if="activeTab === 'reviews'">
@@ -128,7 +146,12 @@ export default {
       pagesPerGroup: 5,
       sortOption: "latest",
       canWriteReview: false,
+      showReviewForm: false, // ✅ 폼 표시 여부
       isLoggedIn: false, // ✅ 로그인 여부 추가
+      newReview: {
+        rating: 5,
+        comment: ""
+      }
     };
   },
 
@@ -261,6 +284,29 @@ export default {
         alert("추천을 처리하는 중 오류가 발생했습니다.");
       }
     },
+
+     async submitReview() {
+      if (!this.isLoggedIn || !this.canWriteReview) {
+        alert("리뷰를 작성할 수 없습니다.");
+        return;
+      }
+      try {
+        const response = await axios.post("http://localhost:8082/pass/reviews/add", {
+          productId: this.productId,
+          rating: this.newReview.rating,
+          comment: this.newReview.comment
+        }, { withCredentials: true });
+
+        if (response.status === 200) {
+          alert("리뷰가 성공적으로 등록되었습니다.");
+          this.showReviewForm = false;
+          this.fetchReviews(1);
+        }
+      } catch (error) {
+        console.error("리뷰 작성 실패:", error);
+        alert("리뷰 작성 중 오류가 발생했습니다.");
+      }
+    },
     formatDate(dateStr) {
       const date = new Date(dateStr);
       return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
@@ -286,9 +332,6 @@ export default {
       }
     },
 
-    writeReview() {
-      this.$router.push(`/pass/products/${this.productId}/review`);
-    },
   },
 };
 </script>

@@ -300,7 +300,8 @@ export default {
         if (response.status === 200) {
           alert("리뷰가 성공적으로 등록되었습니다.");
           this.showReviewForm = false;
-          this.fetchReviews(1);
+           await this.fetchReviews(1);
+          await this.checkPurchaseStatus();
         }
       } catch (error) {
         console.error("리뷰 작성 실패:", error);

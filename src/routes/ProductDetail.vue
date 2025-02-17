@@ -3,29 +3,28 @@
     <div class="row">
       <!-- 상품 이미지 -->
       <div class="col-md-6 d-flex justify-content-center align-items-start">
-        <img :src="product.imageUrl || demoImg" alt="상품 이미지" class="img-fluid rounded" />
+        <img
+          :src="product.imageUrl || demoImg"
+          alt="상품 이미지"
+          class="img-fluid rounded"
+        />
       </div>
 
       <!-- 상품 정보 -->
       <div class="col-md-6">
         <h1 class="fw-bold mb-3">{{ product.name }}</h1>
-        <h2 class="text fw-bold mb-4" style="font-size: 2rem;">
+        <h2 class="text fw-bold mb-4" style="font-size: 2rem">
           {{ (product.price ?? 0).toLocaleString() }}원
-          <small class="text-muted text-decoration-line-through" style="font-size: 1.2rem;">
+          <small
+            class="text-muted text-decoration-line-through"
+            style="font-size: 1.2rem"
+          >
             {{ (product.fakePrice ?? 249000).toLocaleString() }}원
           </small>
         </h2>
         <p class="text-muted">{{ product.description }}</p>
 
-         <!-- 기간 옵션 -->
-        <!-- <div class="mb-4">
-          <label for="period" class="form-label fw-bold">기간 옵션 *</label>
-          <select id="period" class="form-select" v-model="selectedOption">
-            <option value="">기간 옵션 (필수)</option>
-            <option v-for="(option, index) in product.options" :key="index" :value="option">{{ option }}</option>
-          </select>
-          <p v-if="showError" class="text-danger mt-2">기간 옵션을 선택하셔야 합니다.</p>
-        </div> -->
+        <!-- 기간 옵션 -->
         <div class="mb-4">
           <label for="period" class="form-label fw-bold">기간 옵션 *</label>
           <select id="period" class="form-select" v-model="selectedOption">
@@ -34,82 +33,180 @@
             <option>6개월</option>
             <option>12개월</option>
           </select>
-          <p v-if="showError" class="text-danger mt-2">기간 옵션을 선택하셔야 합니다.</p>
+          <p v-if="showError" class="text-danger mt-2">
+            기간 옵션을 선택하셔야 합니다.
+          </p>
         </div>
-
 
         <!-- 버튼 -->
         <div class="d-flex gap-3">
-          <button class="btn btn-dark flex-fill primary-color" @click="handlePurchase">구매하기</button>
-          <button class="btn btn-outline-secondary flex-fill" @click="handleAddToCart">장바구니</button>
+          <button
+            class="btn btn-dark flex-fill primary-color"
+            @click="handlePurchase"
+          >
+            구매하기
+          </button>
+          <button
+            class="btn btn-outline-secondary flex-fill"
+            @click="handleAddToCart"
+          >
+            장바구니
+          </button>
         </div>
       </div>
     </div>
   </div>
   <!-- Comments 컴포넌트 -->
-  <Comments v-if="product.id" :productId="product.id"/>
-
+  <Comments v-if="product.id" :productId="product.id" />
 </template>
 
 <script>
-import axios from 'axios';
-import testImg from '~/assets/logo.png';
-import Comments from '~/components/Comments.vue';
+import axios from "axios";
+import testImg from "~/assets/logo.png";
+import Comments from "~/components/Comments.vue";
 
 export default {
   components: {
-    Comments
+    Comments,
   },
   data() {
     return {
       product: {},
       demoImg: testImg,
-      selectedOption: '',
+      selectedOption: "",
       showError: false,
-//      userId : 1
+      isLoggedIn: false,
+      userId: null,
     };
   },
   mounted() {
     const productId = this.$route.params.id;
     this.fetchProduct(productId);
+    this.checkLoginStatus(); // 로그인 상태 확인
   },
   methods: {
+    async checkLoginStatus() {
+      try {
+        console.log("✅ 로그인 상태 확인 API 호출");
+
+        const response = await axios.get("http://localhost:8082/user/info", {
+          withCredentials: true, // 🔹 JWT 쿠키 포함 필수
+        });
+
+        console.log("✅ API 응답:", response.data);
+
+        if (response.status === 200 && response.data?.loggedIn) {
+          this.isLoggedIn = true;
+          this.userId = response.data.userId;
+          console.log("✅ 로그인 상태: true, userId:", this.userId);
+        } else {
+          this.isLoggedIn = false;
+          this.userId = null;
+          console.log("❌ 로그인 상태: false");
+        }
+      } catch (error) {
+        console.error("❌ 로그인 상태 확인 실패:", error);
+        this.isLoggedIn = false;
+        this.userId = null;
+      }
+    },
+
     async fetchProduct(id) {
       try {
-        const response = await axios.get(`http://localhost:8082/pass/products/${id}`);
+        const response = await axios.get(
+          `http://localhost:8082/pass/products/${id}`
+        );
         this.product = response.data;
       } catch (error) {
-        console.error('❌ 상품 정보를 불러오는 중 오류 발생:', error);
+        console.error("❌ 상품 정보를 불러오는 중 오류 발생:", error);
       }
     },
-    handlePurchase() {
+
+    async handleAddToCart() {
+      await this.checkLoginStatus();
+
+      if (!this.isLoggedIn) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
       if (!this.selectedOption) {
         this.showError = true;
-      } else {
-        this.$router.push('/cart');
+        return;
+      }
+
+      try {
+        console.log("🚀 장바구니 추가 API 호출, productId:", this.product.id);
+
+        // ✅ API 요청 (withCredentials: true 사용)
+        await axios.post(
+          "http://localhost:8082/cart/add",
+          { productId: this.product.id, quantity: 1 },
+          { withCredentials: true }
+        );
+
+        // ✅ 쇼핑 계속 여부 팝업 띄우기
+        const proceed = confirm(
+          "장바구니에 추가되었습니다. 쇼핑을 계속하시겠습니까?"
+        );
+        if (!proceed) {
+          this.$router.push("/cart");
+        }
+      } catch (error) {
+        console.error("❌ 장바구니 추가 중 오류 발생:", error);
+        alert("장바구니에 추가하는 중 오류가 발생했습니다.");
       }
     },
-    handleAddToCart() {
+    async handlePurchase() {
+      await this.checkLoginStatus();
+
+      if (!this.isLoggedIn) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
       if (!this.selectedOption) {
         this.showError = true;
-      } else {
-        this.showCustomAlert();
+        return;
+      }
+
+      try {
+        console.log("🚀 구매하기 버튼 클릭됨, productId:", this.product.id);
+
+        // ✅ API 요청 (JSON 형식)
+        await axios.post(
+          "http://localhost:8082/cart/add",
+          { productId: this.product.id, quantity: 1 }, // ✅ JSON 형식
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "application/json" }, // ✅ JSON 헤더
+          }
+        );
+
+        // ✅ 장바구니 추가 후 바로 장바구니 페이지로 이동
+        alert("장바구니에 추가되었습니다.");
+        this.$router.push("/cart");
+      } catch (error) {
+        console.error("❌ 장바구니 추가 중 오류 발생:", error);
+        alert("장바구니에 추가하는 중 오류가 발생했습니다.");
       }
     },
     showCustomAlert() {
-      const proceed = confirm('장바구니에 추가되었습니다. 계속 쇼핑하시겠습니까?');
+      const proceed = confirm(
+        "장바구니에 추가되었습니다. 계속 쇼핑하시겠습니까?"
+      );
       if (proceed) {
-        this.$router.push('/productList');
+        this.$router.push("/productList"); // ✅ 쇼핑 계속하기 → 상품 목록 페이지로 이동
       } else {
-        this.$router.push('/cart');
+        this.$router.push("/cart"); // ✅ 장바구니 페이지로 이동
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped lang="scss">
-@import '~/scss/main.scss';
+@import "~/scss/main.scss";
 
 .primary-color {
   background-color: $primary;
@@ -121,7 +218,6 @@ export default {
   background-color: $primary-opacity;
   color: white;
 }
-
 
 .text-danger {
   color: red !important;

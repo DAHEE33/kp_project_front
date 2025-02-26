@@ -85,6 +85,20 @@ export default {
     this.checkLoginStatus(); // 로그인 상태 확인
   },
   methods: {
+  logoutUser(actionType = "") {
+  this.isLoggedIn = false;
+  this.userId = null;
+
+  if (actionType) {
+    console.log(`🔄 [${actionType}] 중 세션 만료 → 강제 새로고침 실행`);
+    // ❌ 기존: alert 두 번 발생 가능성 → ✅ "로그인이 필요합니다." 한 번만 띄우기
+    setTimeout(() => {
+      window.location.reload(); // 🔄 특정 액션 중 세션 만료 시 강제 새로고침
+    }, 100); // ✅ alert 후 약간의 딜레이 후 새로고침 (UX 개선)
+  }
+}
+
+,
     async checkLoginStatus() {
       try {
         console.log("✅ 로그인 상태 확인 API 호출");
@@ -157,40 +171,44 @@ export default {
         alert("장바구니에 추가하는 중 오류가 발생했습니다.");
       }
     },
-    async handlePurchase() {
-      await this.checkLoginStatus();
+   async handlePurchase() {
+  await this.checkLoginStatus();
 
-      if (!this.isLoggedIn) {
-        alert("로그인이 필요합니다.");
-        return;
-      }
+  if (!this.isLoggedIn) {
+    alert("로그인이 필요합니다."); // ✅ 한 번만 alert 실행
+    this.logoutUser("구매하기"); // 🔄 새로고침은 logoutUser()에서 처리
+    return;
+  }
 
-      if (!this.selectedOption) {
-        this.showError = true;
-        return;
-      }
+  if (!this.selectedOption) {
+    this.showError = true;
+    return;
+  }
 
-      try {
-        console.log("🚀 구매하기 버튼 클릭됨, productId:", this.product.id);
+  try {
+    console.log("🚀 구매하기 버튼 클릭됨, productId:", this.product.id);
 
-        // ✅ API 요청 (JSON 형식)
-        await axios.post(
-          "http://localhost:8082/cart/add",
-          { productId: this.product.id, quantity: 1 }, // ✅ JSON 형식
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "application/json" }, // ✅ JSON 헤더
-          }
-        );
+    await axios.post(
+      "http://localhost:8082/cart/add",
+      { productId: this.product.id, quantity: 1 },
+      { withCredentials: true, headers: { "Content-Type": "application/json" } }
+    );
 
-        // ✅ 장바구니 추가 후 바로 장바구니 페이지로 이동
-        alert("장바구니에 추가되었습니다.");
-        this.$router.push("/cart");
-      } catch (error) {
-        console.error("❌ 장바구니 추가 중 오류 발생:", error);
-        alert("장바구니에 추가하는 중 오류가 발생했습니다.");
-      }
-    },
+    alert("장바구니에 추가되었습니다.");
+    this.$router.push("/cart");
+  } catch (error) {
+    console.error("❌ 장바구니 추가 중 오류 발생:", error);
+
+    if (error.response?.status === 401) {
+      alert("로그인이 필요합니다."); // ✅ 여기서도 한 번만 실행
+      this.logoutUser("구매하기");
+    } else {
+      alert("장바구니에 추가하는 중 오류가 발생했습니다.");
+    }
+  }
+}
+
+,
     showCustomAlert() {
       const proceed = confirm(
         "장바구니에 추가되었습니다. 계속 쇼핑하시겠습니까?"

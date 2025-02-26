@@ -52,7 +52,11 @@
         </div>
         <div class="mb-2">
           <label>리뷰 내용:</label>
-          <textarea v-model="newReview.comment" class="form-control" rows="3"></textarea>
+          <textarea
+            v-model="newReview.comment"
+            class="form-control"
+            rows="3"
+          ></textarea>
         </div>
         <button class="btn btn-success" @click="submitReview">작성 완료</button>
       </div>
@@ -150,8 +154,8 @@ export default {
       isLoggedIn: false, // ✅ 로그인 여부 추가
       newReview: {
         rating: 5,
-        comment: ""
-      }
+        comment: "",
+      },
     };
   },
 
@@ -168,27 +172,25 @@ export default {
     },
   },
   mounted() {
-  console.log("✅ Vue mounted 실행됨, productId:", this.productId);
+    console.log("✅ Vue mounted 실행됨, productId:", this.productId);
 
-  this.fetchReviews(1);
+    this.fetchReviews(1);
 
-  this.checkLoginStatus().then(() => {
-    console.log("✅ 로그인 상태 확인 완료, checkPurchaseStatus 실행");
-    this.checkPurchaseStatus();
-  });
-}
-,
+    this.checkLoginStatus().then(() => {
+      console.log("✅ 로그인 상태 확인 완료, checkPurchaseStatus 실행");
+      this.checkPurchaseStatus();
+    });
+  },
   methods: {
     logoutUser() {
-  this.isLoggedIn = false;
-  this.userId = null;
-  console.log("🔄 세션 만료 -> 강제 새로고침 실행");
+      this.isLoggedIn = false;
+      this.userId = null;
+      console.log("🔄 세션 만료 -> 강제 새로고침 실행");
 
-  setTimeout(() => {
-    window.location.reload(); // 🔄 alert 없이 바로 새로고침
-  }, 100); // UX 개선을 위해 약간의 딜레이 추가
-}
-,
+      setTimeout(() => {
+        window.location.reload(); // 🔄 alert 없이 바로 새로고침
+      }, 100); // UX 개선을 위해 약간의 딜레이 추가
+    },
     // ✅ 리뷰 목록 불러오기
     async fetchReviews(page) {
       try {
@@ -242,88 +244,91 @@ export default {
 
     // ✅ 구매 여부 확인
     async checkPurchaseStatus() {
-  if (!this.isLoggedIn) {
-    this.canWriteReview = false;
-    console.log("❌ 사용자가 로그인하지 않음 → 리뷰 작성 버튼 숨김");
-    return;
-  }
+      if (!this.isLoggedIn) {
+        this.canWriteReview = false;
+        console.log("❌ 사용자가 로그인하지 않음 → 리뷰 작성 버튼 숨김");
+        return;
+      }
 
-  console.log(`✅ 구매 여부 확인 API 호출: productId=${this.productId}`);
-  
-  try {
-    const response = await axios.get(
-      `http://localhost:8082/pass/reviews/${this.productId}/check-purchase`,
-      { withCredentials: true }
-    );
+      console.log(`✅ 구매 여부 확인 API 호출: productId=${this.productId}`);
 
-    this.canWriteReview = response.data;
-    console.log(`✅ API 응답: ${response.data} → canWriteReview=${this.canWriteReview}`);
-  } catch (error) {
-    console.error("❌ 구매 여부 확인 오류:", error);
-    this.canWriteReview = false;
-  }
-}
-,
+      try {
+        const response = await axios.get(
+          `http://localhost:8082/pass/reviews/${this.productId}/check-purchase`,
+          { withCredentials: true }
+        );
+
+        this.canWriteReview = response.data;
+        console.log(
+          `✅ API 응답: ${response.data} → canWriteReview=${this.canWriteReview}`
+        );
+      } catch (error) {
+        console.error("❌ 구매 여부 확인 오류:", error);
+        this.canWriteReview = false;
+      }
+    },
     // ✅ 추천하기(좋아요) 토글
     async toggleLike(review) {
-  await this.checkLoginStatus();
+      await this.checkLoginStatus();
 
-  console.log("✅ 좋아요 버튼 클릭됨, 로그인 상태:", this.isLoggedIn);
+      console.log("✅ 좋아요 버튼 클릭됨, 로그인 상태:", this.isLoggedIn);
 
-  if (!this.isLoggedIn) {
-    alert("로그인이 필요합니다."); // ✅ 한 번만 실행
-    this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
-    return;
-  }
+      if (!this.isLoggedIn) {
+        alert("로그인이 필요합니다."); // ✅ 한 번만 실행
+        this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
+        return;
+      }
 
-  try {
-    const response = await axios.post(
-      `http://localhost:8082/pass/reviews/${review.id}/like`,
-      {},
-      { withCredentials: true }
-    );
+      try {
+        const response = await axios.post(
+          `http://localhost:8082/pass/reviews/${review.id}/like`,
+          {},
+          { withCredentials: true }
+        );
 
-    const message = response.data || "추천 상태가 변경되었습니다.";
-    alert(message);
+        const message = response.data || "추천 상태가 변경되었습니다.";
+        alert(message);
 
-    if (response.data === "추천이 완료되었습니다.") {
-      review.likes++;
-      review.likedByUser = true;
-    }
-  } catch (error) {
-    console.error("❌ 추천 실패:", error);
-    alert("추천을 처리하는 중 오류가 발생했습니다.");
-  }
-}
-,
+        if (response.data === "추천이 완료되었습니다.") {
+          review.likes++;
+          review.likedByUser = true;
+        }
+      } catch (error) {
+        console.error("❌ 추천 실패:", error);
+        alert("추천을 처리하는 중 오류가 발생했습니다.");
+      }
+    },
+    async submitReview() {
+      await this.checkLoginStatus();
 
-     async submitReview() {
-  await this.checkLoginStatus();
+      if (!this.isLoggedIn || !this.canWriteReview) {
+        alert("로그인이 필요합니다."); // ✅ 한 번만 실행
+        this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
+        return;
+      }
 
-  if (!this.isLoggedIn || !this.canWriteReview) {
-    alert("로그인이 필요합니다."); // ✅ 한 번만 실행
-    this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
-    return;
-  }
+      try {
+        const response = await axios.post(
+          "http://localhost:8082/pass/reviews/add",
+          {
+            productId: this.productId,
+            rating: this.newReview.rating,
+            comment: this.newReview.comment,
+          },
+          { withCredentials: true }
+        );
 
-  try {
-    const response = await axios.post("http://localhost:8082/pass/reviews/add", {
-      productId: this.productId,
-      rating: this.newReview.rating,
-      comment: this.newReview.comment
-    }, { withCredentials: true });
-
-    if (response.status === 200) {
-      alert("리뷰가 성공적으로 등록되었습니다.");
-      this.showReviewForm = false;
-      await this.fetchReviews(1);
-      await this.checkPurchaseStatus();
-    }
-  } catch (error) {
-    console.error("리뷰 작성 실패:", error);
-    alert("리뷰 작성 중 오류가 발생했습니다.");
-  }
-},
+        if (response.status === 200) {
+          alert("리뷰가 성공적으로 등록되었습니다.");
+          this.showReviewForm = false;
+          await this.fetchReviews(1);
+          await this.checkPurchaseStatus();
+        }
+      } catch (error) {
+        console.error("리뷰 작성 실패:", error);
+        alert("리뷰 작성 중 오류가 발생했습니다.");
+      }
+    },
     formatDate(dateStr) {
       const date = new Date(dateStr);
       return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
@@ -348,7 +353,6 @@ export default {
         this.fetchReviews((this.currentPageGroup - 1) * this.pagesPerGroup + 1);
       }
     },
-
   },
 };
 </script>

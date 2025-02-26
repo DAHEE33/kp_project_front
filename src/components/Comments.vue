@@ -179,6 +179,16 @@ export default {
 }
 ,
   methods: {
+    logoutUser() {
+  this.isLoggedIn = false;
+  this.userId = null;
+  console.log("🔄 세션 만료 -> 강제 새로고침 실행");
+
+  setTimeout(() => {
+    window.location.reload(); // 🔄 alert 없이 바로 새로고침
+  }, 100); // UX 개선을 위해 약간의 딜레이 추가
+}
+,
     // ✅ 리뷰 목록 불러오기
     async fetchReviews(page) {
       try {
@@ -256,58 +266,64 @@ export default {
 ,
     // ✅ 추천하기(좋아요) 토글
     async toggleLike(review) {
-      await this.checkLoginStatus();
+  await this.checkLoginStatus();
 
-      console.log("✅ 좋아요 버튼 클릭됨, 로그인 상태:", this.isLoggedIn);
+  console.log("✅ 좋아요 버튼 클릭됨, 로그인 상태:", this.isLoggedIn);
 
-      if (!this.isLoggedIn) {
-        alert("회원만 가능합니다.");
-        return;
-      }
+  if (!this.isLoggedIn) {
+    alert("로그인이 필요합니다."); // ✅ 한 번만 실행
+    this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
+    return;
+  }
 
-      try {
-        const response = await axios.post(
-          `http://localhost:8082/pass/reviews/${review.id}/like`,
-          {},
-          { withCredentials: true }
-        );
+  try {
+    const response = await axios.post(
+      `http://localhost:8082/pass/reviews/${review.id}/like`,
+      {},
+      { withCredentials: true }
+    );
 
-        const message = response.data || "추천 상태가 변경되었습니다.";
-        alert(message); // 🔹 응답이 undefined이면 기본 메시지 출력
+    const message = response.data || "추천 상태가 변경되었습니다.";
+    alert(message);
 
-        if (response.data === "추천이 완료되었습니다.") {
-          review.likes++;
-          review.likedByUser = true;
-        }
-      } catch (error) {
-        console.error("❌ 추천 실패:", error);
-        alert("추천을 처리하는 중 오류가 발생했습니다.");
-      }
-    },
+    if (response.data === "추천이 완료되었습니다.") {
+      review.likes++;
+      review.likedByUser = true;
+    }
+  } catch (error) {
+    console.error("❌ 추천 실패:", error);
+    alert("추천을 처리하는 중 오류가 발생했습니다.");
+  }
+}
+,
 
      async submitReview() {
-      if (!this.isLoggedIn || !this.canWriteReview) {
-        alert("리뷰를 작성할 수 없습니다.");
-        return;
-      }
-      try {
-        const response = await axios.post("http://localhost:8082/pass/reviews/add", {
-          productId: this.productId,
-          rating: this.newReview.rating,
-          comment: this.newReview.comment
-        }, { withCredentials: true });
+  await this.checkLoginStatus();
 
-        if (response.status === 200) {
-          alert("리뷰가 성공적으로 등록되었습니다.");
-          this.showReviewForm = false;
-           await this.fetchReviews(1);
-          await this.checkPurchaseStatus();
-        }
-      } catch (error) {
-        console.error("리뷰 작성 실패:", error);
-        alert("리뷰 작성 중 오류가 발생했습니다.");
-      }
-    },
+  if (!this.isLoggedIn || !this.canWriteReview) {
+    alert("로그인이 필요합니다."); // ✅ 한 번만 실행
+    this.logoutUser(); // 🔄 alert 없이 새로고침만 실행
+    return;
+  }
+
+  try {
+    const response = await axios.post("http://localhost:8082/pass/reviews/add", {
+      productId: this.productId,
+      rating: this.newReview.rating,
+      comment: this.newReview.comment
+    }, { withCredentials: true });
+
+    if (response.status === 200) {
+      alert("리뷰가 성공적으로 등록되었습니다.");
+      this.showReviewForm = false;
+      await this.fetchReviews(1);
+      await this.checkPurchaseStatus();
+    }
+  } catch (error) {
+    console.error("리뷰 작성 실패:", error);
+    alert("리뷰 작성 중 오류가 발생했습니다.");
+  }
+},
     formatDate(dateStr) {
       const date = new Date(dateStr);
       return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;

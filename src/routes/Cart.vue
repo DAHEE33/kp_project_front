@@ -194,21 +194,28 @@ export default {
         return;
       }
 
-      const productIds = selectedItems.map((item) => item.id);
+      // ✅ cartId 기준으로 삭제 요청
+      const cartIds = selectedItems.map((item) => item.id);
+
+      console.log("📌 삭제 요청 - 장바구니 ID 리스트 (cartIds):", cartIds);
 
       try {
-        await axios({
+        await axios.request({
           method: "DELETE",
           url: "http://localhost:8082/cart/remove-selected",
-          data: productIds,
+          data: { cartIds }, // ✅ JSON 객체로 감싸서 전송
           withCredentials: true,
           headers: { "Content-Type": "application/json" },
         });
 
+        alert("선택한 상품이 삭제되었습니다.");
         this.fetchCartItems();
         this.allSelected = false;
       } catch (error) {
-        console.error("❌ 장바구니 상품 삭제 오류:", error);
+        console.error(
+          "❌ 장바구니 상품 삭제 오류:",
+          error.response?.data || error.message
+        );
       }
     },
   },

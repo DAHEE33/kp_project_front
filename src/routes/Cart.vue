@@ -81,9 +81,13 @@
         <RouterLink class="btn btn-light flex-fill" :to="shoppinghref"
           >계속 쇼핑하기</RouterLink
         >
-        <RouterLink class="btn primary-color flex-fill" :to="orderhref"
-          >주문하기</RouterLink
+        <RouterLink
+          class="btn primary-color flex-fill"
+          :to="selectedCartIds.length > 0 ? '/order' : '#'"
+          @click="validateOrder"
         >
+          주문하기
+        </RouterLink>
       </div>
     </div>
   </div>
@@ -115,6 +119,11 @@ export default {
         0
       );
     },
+    selectedCartIds() {
+      return this.cartItems
+        .filter((item) => item.selected)
+        .map((item) => item.id);
+    },
   },
   async mounted() {
     await this.fetchCartItems();
@@ -125,6 +134,17 @@ export default {
       this.cartItems.forEach((item) => {
         item.selected = this.allSelected;
       });
+    },
+    validateOrder(event) {
+      if (this.selectedCartIds.length === 0) {
+        event.preventDefault(); // ✅ 이동 막기
+        alert("주문할 상품을 선택해주세요.");
+      } else {
+        localStorage.setItem(
+          "selectedCartIds",
+          JSON.stringify(this.selectedCartIds)
+        );
+      }
     },
 
     // ✅ 개별 체크박스 변경 시 전체 선택 여부 확인

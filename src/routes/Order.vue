@@ -153,12 +153,13 @@ import axios from "axios";
 export default {
   data() {
     return {
-      orderItems: [], // ✅ undefined 방지
+      orderItems: [], 
       userInfo: { username: "", phone: "", email: "" },
       inputPhoneNumber: "",
       totalPrice: 0,
       discountAmount: 0,
       selectedPayment: "payBank",
+      cartIds: [],  // ✅ 선택된 장바구니 ID 저장
       paymentMethods: [
         { value: "payBank", label: "무통장입금" },
         { value: "payKakao", label: "카카오페이" },
@@ -172,6 +173,17 @@ export default {
     },
   },
   methods: {
+    /**
+     * ✅ localStorage에서 cartIds 가져오기
+     */
+    getCartIdsFromStorage() {
+      const storedCartIds = localStorage.getItem("selectedCartIds");
+      this.cartIds = storedCartIds ? JSON.parse(storedCartIds) : [];
+    },
+
+    /**
+     * ✅ 주문 미리보기 API 호출 (cartIds만 보냄, userId X)
+     */
     async fetchOrderPreview() {
       console.log("🚀 주문 미리보기 API 요청 시작");
 
@@ -179,49 +191,56 @@ export default {
         const response = await axios.post(
           "http://localhost:8082/orders/preview",
           {
-            userId: this.userInfo.id,
-            cartIds: [1, 2, 3], // ✅ 장바구니 ID
-          }
+            cartIds: this.cartIds, // ✅ userId 없이 cartIds만 전달
+          },
+          { withCredentials: true } // ✅ JWT 쿠키 포함 필수
         );
 
         console.log("✅ API 응답:", response.data);
 
-        this.orderItems = response.data.orderItems || []; // ✅ undefined 방지
+        this.orderItems = response.data.orderItems || []; 
         this.userInfo.username = response.data.username || "알 수 없음";
         this.userInfo.phone = response.data.phoneNumber || "";
         this.userInfo.email = response.data.email || "";
-
         this.totalPrice = response.data.totalPrice || 0;
         this.discountAmount = response.data.discountAmount || 0;
       } catch (error) {
         console.error("❌ 주문 정보를 불러오는 중 오류 발생:", error);
-        this.orderItems = []; // ✅ 요청 실패 시 빈 배열 할당
+        this.orderItems = []; 
         this.totalPrice = 0;
         this.discountAmount = 0;
       }
     },
+
+    /**
+     * ✅ 주문 생성 API 호출
+     */
     async processOrder() {
       try {
-        const response = await axios.post("/api/orders/create-or-get", {
-          userId: this.userInfo.id,
-          phoneNumber: this.userInfo.phone || this.inputPhoneNumber,
-          cartIds: [1, 2, 3],
-          totalPrice: this.finalPrice,
-          discountAmount: this.discountAmount,
-          paymentMethod: this.selectedPayment,
-        });
+        const response = await axios.post(
+          "http://localhost:8082/orders/create",
+          {
+            cartIds: this.cartIds, // ✅ userId 없이 cartIds만 전달
+            totalPrice: this.finalPrice,
+            discountAmount: this.discountAmount,
+            paymentMethod: this.selectedPayment,
+          },
+          { withCredentials: true } // ✅ JWT 쿠키 포함 필수
+        );
 
         alert("주문이 성공적으로 생성되었습니다!");
       } catch (error) {
-        console.error("주문 생성 오류:", error);
+        console.error("❌ 주문 생성 오류:", error);
       }
     },
   },
   created() {
-    this.fetchOrderPreview();
+    this.getCartIdsFromStorage(); // ✅ 장바구니 ID 가져오기
+    this.fetchOrderPreview(); // ✅ 주문 미리보기 호출
   },
 };
 </script>
+
 
 <style scoped>
 .order-page {

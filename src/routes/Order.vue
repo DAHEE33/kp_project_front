@@ -138,7 +138,7 @@
           </div>
         </div>
         <!-- 결제하기 버튼 -->
-        <button class="btn btn-primary btn-lg text-white" @click="processOrder">
+        <button class="btn btn-primary btn-lg text-white" @click="goToPayment">
           결제하기
         </button>
       </div>
@@ -255,35 +255,10 @@ export default {
       this.isEditing = !this.isEditing;
     },
 
-    // async processOrder() {
-    //   if (!this.userInfo.phone) {
-    //     alert("📢 전화번호를 입력하세요!");
-    //     return;
-    //   }
-
-    //   // ✅ 결제 요청 시 userId + 수정된 정보 전송
-    //   const orderData = {
-    //     userId: this.originalUserInfo.userId, // 변경되지 않는 userId
-    //     username: this.userInfo.username,
-    //     phone: this.userInfo.phone,
-    //     email: this.userInfo.email,
-    //     cartIds: this.cartIds, // 장바구니 ID
-    //     paymentMethod: this.selectedPayment, // 결제 수단
-    //   };
-
-    //   try {
-    //     const response = await axios.post(
-    //       "http://localhost:8082/orders/checkout",
-    //       orderData,
-    //       { withCredentials: true }
-    //     );
-
-    //     alert("✅ 주문이 완료되었습니다!");
-    //   } catch (error) {
-    //     console.error("❌ 결제 처리 중 오류 발생:", error);
-    //     alert("❌ 결제에 실패했습니다.");
-    //   }
-    // },
+    goToPayment() {
+      // 라우터로 Payment 페이지 이동
+      this.$router.push('/payment');
+    },
   },
   created() {
     this.getCartIdsFromStorage();

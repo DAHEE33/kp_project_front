@@ -29,8 +29,8 @@
         </section>
 
 
-         <!-- 주문자 정보 -->
-         <section class="card mb-3">
+        <!-- 주문자 정보 -->
+        <section class="card mb-3">
           <div class="card-header">주문자 정보</div>
           <div class="card-body">
             <p class="mb-1">
@@ -52,10 +52,10 @@
               <input v-else v-model="userInfo.email" type="email" class="form-control" />
             </p>
             <div class="text-end mt-2">
-      <button @click="toggleEdit" class="btn btn-outline-primary btn-sm">
-        {{ isEditing ? "수정 완료" : "수정" }}
-      </button>
-    </div>
+              <button @click="toggleEdit" class="btn btn-outline-primary btn-sm">
+                {{ isEditing ? "수정 완료" : "수정" }}
+              </button>
+            </div>
           </div>
         </section>
       </div>
@@ -90,7 +90,7 @@
                 v-model="selectedPayment" />
               <label class="form-check-label" :for="method.value">{{
                 method.label
-              }}</label>
+                }}</label>
             </div>
             <div v-if="selectedPayment === 'payBank'">
               <select class="form-select mb-2">
@@ -255,9 +255,45 @@ export default {
       this.isEditing = !this.isEditing;
     },
 
-    goToPayment() {
-      // 라우터로 Payment 페이지 이동
-      this.$router.push('/payment');
+    // goToPayment() {
+    //   // 라우터로 Payment 페이지 이동
+    //   this.$router.push('/payment');
+    // },
+    async goToPayment() {
+      try {
+        // 주문 요청 DTO 구성 (userId는 백엔드에서 JWT로부터 주입되므로 별도 전달하지 않아도 됨)
+        const orderRequest = {
+          cartIds: this.cartIds, // 선택된 장바구니 항목 ID 리스트
+          recipientName: this.userInfo.username, // 예시: 주문자 이름을 recipientName으로 사용
+          recipientPhone: this.userInfo.phone,
+          recipientEmail: this.userInfo.email,
+          paymentMethod: "TOSS" // 또는 선택된 결제 방식 (예: this.selectedPayment)
+        };
+
+        // 주문 생성 API 호출 (임시 주문 저장)
+        // URL은 여러분의 백엔드 엔드포인트에 맞게 수정합니다.
+        const response = await axios.post(
+          "http://localhost:8082/orders/create",
+          orderRequest,
+          { withCredentials: true }
+        );
+        
+        // 백엔드에서 생성한 주문 정보를 응답받음 (예: orderId, totalPrice 등)
+        const orderData = response.data;
+        console.log("주문 생성 완료, orderId:", orderData.orderId);
+
+        // 결제 페이지(payment.vue)로 이동하면서 orderId와 totalPrice를 query parameter로 전달
+        this.$router.push({
+          path: '/payment',
+          query: {
+            orderId: orderData.orderId,
+            totalPrice: orderData.totalPrice
+          }
+        });
+      } catch (error) {
+        console.error("주문 생성 중 오류 발생:", error);
+        // 필요시 사용자에게 오류 알림
+      }
     },
   },
   created() {

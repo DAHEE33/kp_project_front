@@ -5,15 +5,13 @@
       <button
         class="btn btn-light flex-fill border-bottom-0 fw-bold tab-button"
         :class="{ active: activeTab === 'reviews' }"
-        @click="activeTab = 'reviews'"
-      >
+        @click="activeTab = 'reviews'">
         구매평 ({{ totalReviews }})
       </button>
       <button
         class="btn btn-light flex-fill border-bottom-0 tab-button"
         :class="{ active: activeTab === 'details' }"
-        @click="activeTab = 'details'"
-      >
+        @click="activeTab = 'details'">
         상세정보
       </button>
     </div>
@@ -23,8 +21,7 @@
       <select
         v-model="sortOption"
         @change="fetchReviews(1)"
-        class="form-select sort-dropdown"
-      >
+        class="form-select sort-dropdown" >
         <option value="latest">최신순</option>
         <option value="rating">별점순</option>
         <option value="likes">추천순</option>
@@ -34,8 +31,7 @@
       <button
         v-if="isLoggedIn && canWriteReview"
         class="btn btn-primary"
-        @click="showReviewForm = true"
-      >
+        @click="showReviewForm = true" >
         리뷰 작성하기
       </button>
     </div>
@@ -55,8 +51,7 @@
           <textarea
             v-model="newReview.comment"
             class="form-control"
-            rows="3"
-          ></textarea>
+            rows="3" ></textarea>
         </div>
         <button class="btn btn-success" @click="submitReview">작성 완료</button>
       </div>
@@ -68,8 +63,7 @@
         <div
           v-for="review in reviews"
           :key="review.id"
-          class="border-top py-3 d-flex justify-content-between align-items-center"
-        >
+          class="border-top py-3 d-flex justify-content-between align-items-center" >
           <div>
             <h5>
               {{ review.user?.username || "알 수 없는 사용자" }}
@@ -84,8 +78,7 @@
           <div class="like-section">
             <button
               :class="['like-btn', { liked: review.likedByUser }]"
-              @click="toggleLike(review)"
-            >
+              @click="toggleLike(review)" >
               ❤️
             </button>
 
@@ -108,8 +101,7 @@
               class="page-item"
               v-for="page in visiblePages"
               :key="page"
-              :class="{ active: currentPage === page }"
-            >
+              :class="{ active: currentPage === page }">
               <button class="page-link" @click="changePage(page)">
                 {{ page }}
               </button>

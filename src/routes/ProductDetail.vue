@@ -6,8 +6,7 @@
         <img
           :src="product.imageUrl || demoImg"
           alt="상품 이미지"
-          class="img-fluid rounded"
-        />
+          class="img-fluid rounded"/>
       </div>
 
       <!-- 상품 정보 -->
@@ -17,8 +16,7 @@
           {{ (product.price ?? 0).toLocaleString() }}원
           <small
             class="text-muted text-decoration-line-through"
-            style="font-size: 1.2rem"
-          >
+            style="font-size: 1.2rem">
             {{ (product.fakePrice ?? 249000).toLocaleString() }}원
           </small>
         </h2>
@@ -42,14 +40,12 @@
         <div class="d-flex gap-3">
           <button
             class="btn btn-dark flex-fill primary-color"
-            @click="handlePurchase"
-          >
+            @click="handlePurchase">
             구매하기
           </button>
           <button
             class="btn btn-outline-secondary flex-fill"
-            @click="handleAddToCart"
-          >
+            @click="handleAddToCart">
             장바구니
           </button>
         </div>

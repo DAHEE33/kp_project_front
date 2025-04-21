@@ -10,7 +10,9 @@ import ProductList from './ProductList'
 import ProductDetail from './ProductDetail'
 import Order from './Order'
 import Payment from './Payment'
+import Success from './SuccessPage'
 import store from '../store/index'  // Vuex 스토어 불러오기
+
 
 const routes = [
   { path: '/', component: Home },
@@ -22,9 +24,10 @@ const routes = [
   { path: '/mypage', component: Mypage, meta: { requiresAuth: true } },
   { path: '/productList', component: ProductList },
   { path: '/productDetail/:id', name: 'ProductDetail', component: ProductDetail},
-  { path: '/:notFound(.*)', component: NotFound },
   { path: '/order', component: Order },
-  { path: '/payment', component: Payment }
+  { path: '/successPage', component: Success },
+  { path: '/payment', component: Payment },
+  { path: '/:notFound(.*)', component: NotFound }
 ];
 
 const router = createRouter({

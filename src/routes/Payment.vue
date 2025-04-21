@@ -17,6 +17,7 @@
 
 <script>
 import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+// import success from "~/components/SuccessPage.vue";
 
 export default {
   data() {
@@ -30,14 +31,13 @@ export default {
   },
   methods: {
     async requestPayment() {
-      console.log("this.orderId : " + this.orderId);
       if (!this.widgets) return;
       try {
         await this.widgets.requestPayment({
           orderId: this.orderId, // 주문 생성 시 받은 orderId 사용
           orderName: "프로그램", // 필요시 동적으로 변경 가능 -> 추가 수정
-          successUrl: window.location.origin + "/success.html",
-          failUrl: window.location.origin + "/fail.html",
+          successUrl: window.location.origin + "/#/successPage",
+          failUrl: window.location.origin + "/fail",
           // 추가로 고객 정보(이메일, 이름, 전화번호)를 전달할 수 있음
           // customerEmail: "", 
           // customerName: "",
